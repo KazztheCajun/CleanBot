@@ -12,23 +12,37 @@ public class SpillManager : MonoBehaviour
     public Robot bot;
     private bool canSpawn;
     private float cooldown;
+    private List<GameObject> preload;
+    private Vector3 pre_loc = new Vector3(1000, 1000, 1000);
+    private int nextSpill;
 
     // Start is called before the first frame update
     void Start()
     {
         canSpawn = true;
         cooldown = 0;
+        nextSpill = 0;
+        preload = new List<GameObject>();
+        for (int i = 0; i < 200; i++)
+        {
+            GameObject t = Instantiate(spill, pre_loc, Quaternion.identity);
+            t.SetActive(false);
+            preload.Add(t);
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
-        if(canSpawn)
+        if(canSpawn && nextSpill < 200)
         {
             Vector3 loc = new Vector3(Random.Range(-width, width), .1f, Random.Range(-height, height));
-            GameObject temp = Instantiate(spill, loc, Quaternion.identity);
-            bot.spills.Add(temp.transform);
+            GameObject t = preload[nextSpill];
+            bot.spills.Add(t.transform);
+            t.transform.position = loc;
+            t.SetActive(true);
             canSpawn = false;
+            nextSpill++;
         }
         else
         {
@@ -39,10 +53,5 @@ public class SpillManager : MonoBehaviour
                 cooldown = 0;
             }
         }
-    }
-
-    public void RemoveSpill()
-    {
-        Destroy(bot.current.gameObject);
     }
 }

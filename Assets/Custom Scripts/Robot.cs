@@ -41,7 +41,8 @@ public class Robot : MonoBehaviour
             case RState.CLEANING:
                 this.battery -= discharge * Time.deltaTime;
                 MoveToCurrent();
-            break;
+                CleanSpill();
+                break;
             case RState.RESUPPLY:
                 this.battery -= discharge * Time.deltaTime;
                 NavigateHome();
@@ -49,12 +50,13 @@ public class Robot : MonoBehaviour
         }
     }
 
-    void OnCollisionEnter(Collision c)
+    public void CleanSpill()
     {
-        if(c.gameObject.tag == "spill")
+        if(Vector3.Distance(this.transform.position, current.position) < 1)
         {
-            PickUpSpill.Invoke(); // clean up spills
-            spills.RemoveAt(0); // remove it from the list
+            Debug.Log("Cleaning up spill!");
+            Destroy(current.gameObject); // clean up spills
+            spills.Remove(current.gameObject.transform); // remove it from the list
             NextSpill();
         }
     }
@@ -86,15 +88,15 @@ public class Robot : MonoBehaviour
     private void MoveToCurrent()
     {
         Vector3 v = new Vector3(current.position.x - this.transform.position.x, 0f, current.position.z - this.transform.position.z);
-        this.GetComponent<Rigidbody>().MovePosition((this.transform.position + v.normalized * Time.deltaTime * speed));
-        this.transform.LookAt(current);
+        this.GetComponent<Rigidbody>().MovePosition(this.transform.position + v.normalized * Time.deltaTime * speed);
+        //this.transform.LookAt(current);
     }
 
     private void NextSpill()
     {
         if(spills.Count > 0) // check if more spills are in the list
         {
-            current = spills[0]; // get next if so
+            current = spills[Random.Range(0, spills.Count)]; // get next if so
         }
         else // otherwise return to home
         {
