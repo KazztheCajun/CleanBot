@@ -3001,7 +3001,7 @@ MonoBehaviour:
   spill: {fileID: 7491424748175722805, guid: 23d93627ec19d214e8bfd3726bfb9887, type: 3}
   width: 49
   height: 49
-  spawnRate: 10
+  spawnRate: 5
   bot: {fileID: 6891287012522323656}
 --- !u!4 &1026606090
 Transform:
