@@ -6,6 +6,7 @@ public class SensorLine : MonoBehaviour
 {
 
     public Transform obj;
+    public Vector3 noise;
     public Transform sensor;
     public Color color;
     private LineRenderer line;
@@ -24,7 +25,7 @@ public class SensorLine : MonoBehaviour
         if(obj != null && sensor != null)
         {
             this.line.SetPosition(0, sensor.position);
-            this.line.SetPosition(1, obj.position);
+            this.line.SetPosition(1, obj.position + noise);
             this.line.startColor = color;
             this.line.endColor = color;
         }

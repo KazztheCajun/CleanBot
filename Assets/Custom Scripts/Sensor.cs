@@ -5,13 +5,22 @@ using UnityEngine;
 public class Sensor : MonoBehaviour
 {
 
-    public GameObject line_pre;
+    public GameObject linePrefab;
     private List<GameObject> lines;
+    private List<GameObject> preload;
 
     // Start is called before the first frame update
     void Start()
     {
         lines = new List<GameObject>();
+        preload = new List<GameObject>();
+        Vector3 loc = new Vector3(1000, 1000, 1000);
+        for (int i = 0; i < 100; i++)
+        {
+            GameObject o = Instantiate(linePrefab, loc, Quaternion.identity);
+            preload.Add(o);
+            o.SetActive(false);
+        }
     }
 
     // Update is called once per frame
@@ -19,62 +28,67 @@ public class Sensor : MonoBehaviour
     {
         foreach(GameObject g in lines)
         {
-            SetColor(g);
+            SensorLine l = g.GetComponent<SensorLine>(); // get the SensorLine object
+            l.noise = GenerateNoise(Vector3.Distance(this.transform.position, l.obj.transform.position)); // apply some new noise
+            SetColor(l); // check if it can still be seen
         }
     }
 
     void OnTriggerEnter(Collider other)
     {
         GameObject other_obj = other.gameObject; // cache collided object
-        bool isNew = true; // tracks newly detected objects
-        GameObject line = null; // reference to already created lines
-
-        foreach(GameObject g in lines) // check the list of lines to see if this is a new obstacle to track
+        GameObject temp = GetNextLine();
+        if(temp != null)
         {
-            if (g.GetComponent<SensorLine>().obj == other_obj.transform) // if a line already has the detected object, it cannot be a new line
-            {
-                isNew = false; // it is not a new line
-                line = g; // store the reference to the line
-                break;
-            }
-        }
-
-        if(isNew) // if a new line needs to be created
-        {
-            GameObject temp = Instantiate(line_pre, this.transform.position, Quaternion.identity); // create new line object
             temp.transform.parent = this.transform; // set this sensor as it's parent
             SensorLine l = temp.GetComponent<SensorLine>();
             l.sensor = this.transform; // set this sensor as it's sensor location
             l.obj = other_obj.transform; // set the object as it's obstacle location
+            l.noise = GenerateNoise(Vector3.Distance(this.transform.position, other_obj.transform.position));
             lines.Add(temp); // add it to the list of lines
             temp.SetActive(true); // ensure it is active in the scene
         }
-        else // otherwise reavtivate the object we found
+        else
         {
-            if(line != null)
-            {
-                line.SetActive(true); // make the line visible
-            }   
+            Debug.Log("[Sensor] Tried to get a cached line but got null instead");
         }
     }
 
     void OnTriggerExit(Collider other)
     {
         GameObject other_obj = other.gameObject; // cache collided object
-
+        GameObject temp = null;
         foreach(GameObject g in lines) // check the list of lines to see if this is a new obstacle to track
         {
             if (g.GetComponent<SensorLine>().obj == other_obj.transform) // if a line already has the detected object, it cannot be a new line
             {
+                temp = g;
                 g.SetActive(false);
             }
         }
+
+        if(temp != null) // if a line was found, remove it from the list
+        {
+            lines.Remove(temp);
+        }
     }
 
-    private void SetColor(GameObject other)
+    private Vector3 GenerateNoise(float dist)
     {
-        SensorLine l = other.GetComponent<SensorLine>();
-        if(CheckVisibility(other)) // if the robot can see the obstacle make the line green
+        // return a noise value based on the given distance
+        // if the ditstance is below 1m, +-10mm noise
+        if(dist < 1)
+        {
+            return new Vector3(Random.Range(-.01f, .01f), Random.Range(-.01f, .01f), Random.Range(-.01f, .01f));
+        }
+        // if the distance is greater, +- 1% of distance
+        float o = dist / 100;
+        return new Vector3(Random.Range(-o, o), Random.Range(-o, o), Random.Range(-o, o));
+    }
+
+    private void SetColor(SensorLine l)
+    {
+        if(CheckVisibility(l)) // if the robot can see the obstacle make the line green
         {
             l.color = Color.green;
         }
@@ -85,10 +99,10 @@ public class Sensor : MonoBehaviour
         
     }
 
-    private bool CheckVisibility(GameObject other)
+    private bool CheckVisibility(SensorLine line)
     {
         /*
-         * Checks if the given GameObject is visible to the sensor
+         * Checks if the obstacle of a SensorLine is visible to the sensor
          * Basically draws a ray to the detected object and if there is nothing blocking that ray
          * then the sensor can see the object.
          * Green lines for objects that can be seen
@@ -96,17 +110,46 @@ public class Sensor : MonoBehaviour
          */
 
         RaycastHit target; // hold a spot for the raycast result
-        var dir = other.transform.position - this.transform.position; // get the directional vector to the other object
-        Physics.Raycast(this.transform.position, dir, out target); // draw ray between sensor and object
-        if(target.transform == other.transform) // if there is no object between them
+        var dir = line.obj.transform.position - this.transform.position; // get the directional vector to the line obstacle
+        Physics.Raycast(this.transform.position, dir.normalized, out target); // draw ray between sensor and obstacle
+        if(target.transform == line.obj.transform) // if there is no object between them
         {
+            //Debug.Log($"{this.gameObject} can see {target.transform.gameObject}");
             return true; // the sensor can see the object
         }
         else
         {
+            //Debug.Log($"{this.gameObject} is unable to see {target.transform.gameObject}");
             return false; // the sensor cannot see the object
         }
     }
 
+    private void CreateNewLine(GameObject other_obj)
+    {
+        GameObject temp = GetNextLine();
+        if(temp != null)
+        {
+            temp.transform.parent = this.transform; // set this sensor as it's parent
+            SensorLine l = temp.GetComponent<SensorLine>();
+            l.sensor = this.transform; // set this sensor as it's sensor location
+            l.obj = other_obj.transform; // set the object as it's obstacle location
+            l.noise = GenerateNoise(Vector3.Distance(this.transform.position, other_obj.transform.position));
+            lines.Add(temp); // add it to the list of lines
+            temp.SetActive(true); // ensure it is active in the scene
+        }
+    }
+
+    private GameObject GetNextLine()
+    {
+        for (int i = 0; i < preload.Count; i++) // for each object in the preload list
+        {
+            if(!preload[i].activeInHierarchy) // if it is not active
+            {
+                return preload[i];
+            }
+        }
+
+        return null; // otherwise return null
+    }
     
 }

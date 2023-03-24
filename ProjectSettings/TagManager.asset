@@ -6,6 +6,7 @@ TagManager:
   tags:
   - spill
   - robot
+  - obstacle
   layers:
   - Default
   - TransparentFX

@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class Robot : MonoBehaviour
 {
+    // public variables
     public enum RState {DOCKED, CLEANING, RESUPPLY}
     [SerializeField]
     private RState state;
@@ -17,7 +18,10 @@ public class Robot : MonoBehaviour
     public float discharge;
     [Range(0.0f, 100.0f)]
     public float speed;
-    public UnityEvent PickUpSpill;
+    //public UnityEvent PickUpSpill;
+    public bool isPaused;
+
+    // private variables
     private float battery;
 
     // Start is called before the first frame update
@@ -29,25 +33,29 @@ public class Robot : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
-        // do stuff based on current state
-        switch (state)
+        if (!isPaused)
         {
-            case RState.DOCKED:
-                this.battery += recharge * Time.deltaTime;
-                WaitForSpill();
-            break;
-            case RState.CLEANING:
-                this.battery -= discharge * Time.deltaTime;
-                MoveToCurrent();
-                CleanSpill();
+            // do stuff based on current state
+            switch (state)
+            {
+                case RState.DOCKED:
+                    this.battery += recharge * Time.deltaTime;
+                    WaitForSpill();
                 break;
-            case RState.RESUPPLY:
-                this.battery -= discharge * Time.deltaTime;
-                NavigateHome();
-            break;
+                case RState.CLEANING:
+                    this.battery -= discharge * Time.deltaTime;
+                    MoveToCurrent();
+                    CleanSpill();
+                    break;
+                case RState.RESUPPLY:
+                    this.battery -= discharge * Time.deltaTime;
+                    NavigateHome();
+                break;
+            }
         }
+        
     }
 
     public void CleanSpill()
@@ -65,7 +73,7 @@ public class Robot : MonoBehaviour
     {
         MoveToCurrent();
         float dist = Vector3.Distance(this.transform.position, homeBase.position);
-        if(dist < .01)
+        if(dist < .1)
         {
             this.state = RState.DOCKED;
         }
