@@ -36,13 +36,7 @@ public class SpillManager : MonoBehaviour
     {
         if(canSpawn && nextSpill < 200)
         {
-            Vector3 loc = new Vector3(Random.Range(-width, width), .1f, Random.Range(-height, height));
-            GameObject t = preload[nextSpill];
-            bot.spills.Add(t.transform);
-            t.transform.position = loc;
-            t.SetActive(true);
-            canSpawn = false;
-            nextSpill++;
+            SpawnSpill();
         }
         else
         {
@@ -53,5 +47,18 @@ public class SpillManager : MonoBehaviour
                 cooldown = 0;
             }
         }
+    }
+
+    [ContextMenu("Spawn Spill")]
+    void SpawnSpill(){
+        Vector3 loc = new Vector3(Random.Range(-width, width), .1f, Random.Range(-height, height));
+        GameObject t = preload[nextSpill];
+        bot.spills.Add(t.transform);
+        t.transform.position = loc;
+        t.SetActive(true);
+        canSpawn = false;
+        nextSpill++;
+        if(FixedCamera.instance != null)
+            FixedCamera.instance.SeeSpill(t.transform);
     }
 }
