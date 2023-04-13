@@ -10,6 +10,7 @@ public class SpillManager : MonoBehaviour
     [Range(0.0f,100.0f)]
     public float spawnRate; // spawn a spill every x seconds
     public Robot bot;
+    public WindowRobot bot2;
     private bool canSpawn;
     private float cooldown;
     private List<GameObject> preload;
@@ -38,7 +39,15 @@ public class SpillManager : MonoBehaviour
         {
             Vector3 loc = new Vector3(Random.Range(-width, width), .1f, Random.Range(-height, height));
             GameObject t = preload[nextSpill];
-            bot.spills.Add(t.transform);
+            if(bot != null)
+            {
+                bot.spills.Add(t.transform);
+            }
+            if(bot2 != null)
+            {
+                bot2.spills.Add(t.transform);
+            }
+            
             t.transform.position = loc;
             t.SetActive(true);
             canSpawn = false;
