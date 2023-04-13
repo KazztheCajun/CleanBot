@@ -108,7 +108,7 @@ GameObject:
   - component: {fileID: 6223477578398906053}
   - component: {fileID: 8607461450358700941}
   - component: {fileID: 1250038668647579259}
-  - component: {fileID: 6891287012522323656}
+  - component: {fileID: 6845047783953996985}
   m_Layer: 0
   m_Name: Robot_window
   m_TagString: robot
@@ -210,7 +210,7 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 80
   m_CollisionDetection: 0
---- !u!114 &6891287012522323656
+--- !u!114 &6845047783953996985
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -219,16 +219,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 5469531007946859976}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f0b49ffb076fe254997e90c1925049b6, type: 3}
+  m_Script: {fileID: 11500000, guid: 5351aaf4d16c8d5408f142e0c0699787, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   state: 0
   spills: []
   homeBase: {fileID: 0}
   current: {fileID: 0}
-  recharge: 10
-  discharge: 30
-  speed: 100
+  recharge: 8.3
+  discharge: 20.7
+  speed: 20.9
   isPaused: 0
 --- !u!1001 &6954170524254782307
 PrefabInstance:
