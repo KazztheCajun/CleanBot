@@ -63,7 +63,7 @@ public class Robot : MonoBehaviour
         if(Vector3.Distance(this.transform.position, current.position) < 1)
         {
             Debug.Log("Cleaning up spill!");
-            Destroy(current.gameObject); // clean up spills
+            current.gameObject.SetActive(false); // clean up spills
             spills.Remove(current.gameObject.transform); // remove it from the list
             NextSpill();
         }
