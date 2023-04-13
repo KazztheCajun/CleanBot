@@ -38,8 +38,5 @@ public class DynamicWindow : MonoBehaviour
         
     }
 
-    private void fitness() // evaluates the fitness of
-    {
-
-    }
+    
 }

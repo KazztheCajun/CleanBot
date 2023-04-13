@@ -73,7 +73,7 @@ public class Robot : MonoBehaviour
     {
         MoveToCurrent();
         float dist = Vector3.Distance(this.transform.position, homeBase.position);
-        if(dist < .1)
+        if(dist < 1)
         {
             this.state = RState.DOCKED;
         }
