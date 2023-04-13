@@ -63,4 +63,17 @@ public class SpillManager : MonoBehaviour
             }
         }
     }
+
+    [ContextMenu("Spawn Spill")]
+    void SpawnSpill(){
+        Vector3 loc = new Vector3(Random.Range(-width, width), .1f, Random.Range(-height, height));
+        GameObject t = preload[nextSpill];
+        bot.spills.Add(t.transform);
+        t.transform.position = loc;
+        t.SetActive(true);
+        canSpawn = false;
+        nextSpill++;
+        if(FixedCamera.instance != null)
+            FixedCamera.instance.SeeSpill(t.transform);
+    }
 }
