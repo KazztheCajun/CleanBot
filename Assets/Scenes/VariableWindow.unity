@@ -386,7 +386,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &77753026
 Transform:
   m_ObjectHideFlags: 0
@@ -2487,7 +2487,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9149006150713910007, guid: 359f34a4958cb4646afd05f52ba36b5c, type: 3}
       propertyPath: m_RootOrder
-      value: 1
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 9149006150713910007, guid: 359f34a4958cb4646afd05f52ba36b5c, type: 3}
       propertyPath: m_LocalPosition.x
@@ -4025,7 +4025,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 542994295165420712, guid: 3eeaa37fa47ae9d4888cbf7cf55a033e, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.05000305
+      value: 0.55
       objectReference: {fileID: 0}
     - target: {fileID: 542994295165420712, guid: 3eeaa37fa47ae9d4888cbf7cf55a033e, type: 3}
       propertyPath: m_LocalPosition.z
@@ -4063,6 +4063,26 @@ PrefabInstance:
       propertyPath: m_Name
       value: Robot_window
       objectReference: {fileID: 0}
+    - target: {fileID: 6845047783953996985, guid: 3eeaa37fa47ae9d4888cbf7cf55a033e, type: 3}
+      propertyPath: rpm
+      value: 1800
+      objectReference: {fileID: 0}
+    - target: {fileID: 6845047783953996985, guid: 3eeaa37fa47ae9d4888cbf7cf55a033e, type: 3}
+      propertyPath: homeBase
+      value: 
+      objectReference: {fileID: 823030304}
+    - target: {fileID: 6845047783953996985, guid: 3eeaa37fa47ae9d4888cbf7cf55a033e, type: 3}
+      propertyPath: maxPower
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6845047783953996985, guid: 3eeaa37fa47ae9d4888cbf7cf55a033e, type: 3}
+      propertyPath: timeStep
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6845047783953996985, guid: 3eeaa37fa47ae9d4888cbf7cf55a033e, type: 3}
+      propertyPath: linePrefab
+      value: 
+      objectReference: {fileID: 3199432603694952277, guid: 9c40324a8c9848348b8db889870be8a8, type: 3}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3eeaa37fa47ae9d4888cbf7cf55a033e, type: 3}
 --- !u!114 &1304397910 stripped

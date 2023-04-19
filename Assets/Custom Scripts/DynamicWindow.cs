@@ -3,15 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DynamicWindow : MonoBehaviour
+public class DynamicWindow
 {
     /*  
      *  The dynamic window defines the local search space for the robot
      *  It is constructed of a set of translational (x, y) and rotational (Θ) velocities
      *  It is then filtered in three ways:
-     *  -- Only the velocities where the robot can still safely stop
-     *  -- Only the velocities reachable by the next time step
-     *  -- Only the velocities that avoid colliding with obstacles
+     *  -- Only the velocities where the robot can still safely stop | provided by the robot
+     *  -- Only the velocities reachable by the next time step | provided by CreateDynamicWindow
+     *  -- Only the velocities that avoid colliding with obstacles | use the list provided above to collision check
      *  
      *  A velocity is then chosen from the remaining set by maximizing a fitness function that accounts for:
      *  -- Progress toward the goal
@@ -20,91 +20,40 @@ public class DynamicWindow : MonoBehaviour
      *
      */
 
-
-    //public Sensor sensor; // ref to the robot's sensor
-    public Rigidbody robot; // ref to the robot's dynamic rigidbody for physics stuff
-    public GameObject p_obstacle; // obstacle dummy prefab
-    public float timeStep;
-    public float samples; // number of subdivisions of the area around the robot to sample velocities
-
-    private float lastVelocity;
-    private float lastRotation;
-    private float timer;
-    private List<Velocity> window;
-
-    // Start is called before the first frame update
-    void Start()
+    public static List<Vector3> CreateDynamicWindow(List<Velocity> vels) // given a list of safe velocities
     {
-        lastVelocity = robot.velocity.magnitude;
-        lastRotation = robot.angularVelocity.y;
-        timer = 0;
-        window = new List<Velocity>();
-    }
-
-    // Update is called once per frame
-    void FixedUpdate()
-    {
-        if(timer >= timeStep) // every timestep
+        List<Vector3> list = new List<Vector3>();
+        foreach(Velocity v in vels)
         {
-            // clear the window
-            window.Clear();
-            // create a set of translational and rotational velocites
-            float a = robot.velocity.magnitude - lastVelocity / Time.fixedDeltaTime; // calculate the current acceleration
-            float theta = robot.angularVelocity.y; // get the rotational velocity around the Y axis
-
-            for (int i = 0; i < samples; i++)
-            {
-                float velX = robot.velocity.magnitude + ((a) * timeStep); // calculate the next translational velocity X component
-                float theta_a = theta - lastRotation / Time.fixedDeltaTime;
-                float theta_next = theta + (theta_a * timeStep); // calculate the next rotational velocity by adding the acceleration over a single time step
-                //window.Add(new Velocity())
-            }
-
-
-                timer = 0;
+            list.Add(CalculatePosition(v)); // generate a list of positions
         }
-        else
-        {
-            timer += Time.fixedDeltaTime;
-        }
+        return list;
     }
 
-    private Vector3 CalculatePosition(Velocity vel)
+    private static Vector3 CalculatePosition(Velocity vel)
     {
-        return new Vector3(ProjectXVelocity(this.transform.position.x, vel.nextVelocity, vel.nextTheta, vel.theta), 0f, ProjectZVelocity(this.transform.position.z, vel.nextVelocity, vel.nextTheta, vel.theta)); // return a vector3 with the X & Z component and zero'd Y
+        return new Vector3(ProjectXVelocity(vel), 0f, ProjectZVelocity(vel)); // return a vector3 with the X & Z component and zero'd Y
     }
 
-    private float ProjectXVelocity(float c, float nv, float nt, float t)
+    private static float ProjectXVelocity(Velocity v)
     {
-        return c + (CircularArcX(nv, nt) - CircularArcX(robot.velocity.magnitude, t)); // next X is a result of the the integral of V(tn) * COS(Θn) from the current time to the next timestep
+        return v.Location.x + (CircularArcX(v.NextLinearVelocity, v.NextRotationalVelocity) - CircularArcX(v.LinearVelocity, v.RotationalVelocity)); // next X is a result of the the integral of V(tn) * COS(Θn) from the current time to the next timestep
     }
 
-    private float ProjectZVelocity(float c, float nv, float nt, float t)
+    private static float ProjectZVelocity(Velocity v)
     {
-        return c + (CircularArcZ(nv, nt) - CircularArcZ(robot.velocity.magnitude, t)); // next X is a result of the the integral of V(tn) * COS(Θn) from the current time to the next timestep
+        return v.Location.z + (CircularArcZ(v.NextLinearVelocity, v.NextRotationalVelocity) - CircularArcZ(v.LinearVelocity, v.RotationalVelocity)); // next X is a result of the the integral of V(tn) * COS(Θn) from the current time to the next timestep
     }
 
-    private float CircularArcX(float v, float r)
+    private static float CircularArcX(float v, float r)
     {
         return (float) (Math.Pow((double)v, 2.0) * Math.Sin((double) r)) / 2;
     }
 
-    private float CircularArcZ(float v, float r)
+    private static float CircularArcZ(float v, float r)
     {
         return (float) (-Math.Pow((double)v, 2.0) * Math.Cos((double) r)) / 2;
     }
 }
 
-class Velocity
-{
-    public float nextVelocity;
-    public float theta;
-    public float nextTheta;
 
-    public Velocity(float t, float nv, float nt)
-    {
-        this.theta = t;
-        this.nextVelocity = nv;
-        this.nextTheta = nt;
-    }
-}
