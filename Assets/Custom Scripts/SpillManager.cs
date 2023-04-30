@@ -29,9 +29,11 @@ public class SpillManager : MonoBehaviour
         canSpawn = true;
         cooldown = 0;
         preload = new List<GameObject>();
+        Transform parent = GameObject.Find("Preload").transform;
         for (int i = 0; i < 200; i++)
         {
             GameObject t = Instantiate(spill, pre_loc, Quaternion.identity);
+            t.transform.parent = parent;
             t.SetActive(false);
             preload.Add(t);
         }

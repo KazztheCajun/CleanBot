@@ -15,9 +15,11 @@ public class Sensor : MonoBehaviour
         lines = new List<GameObject>();
         preload = new List<GameObject>();
         Vector3 loc = new Vector3(1000, 1000, 1000);
+        Transform parent = GameObject.Find("Preload").transform;
         for (int i = 0; i < 100; i++)
         {
             GameObject o = Instantiate(linePrefab, loc, Quaternion.identity);
+            o.transform.parent = parent;
             preload.Add(o);
             o.SetActive(false);
         }

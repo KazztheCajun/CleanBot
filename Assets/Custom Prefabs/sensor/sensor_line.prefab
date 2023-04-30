@@ -90,6 +90,15 @@ LineRenderer:
         weightedMode: 0
         inWeight: 0.33333334
         outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: -0.36845005
+        outSlope: -0.36845005
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.1477046
+        outWeight: 0
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
@@ -143,5 +152,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   obj: {fileID: 0}
+  noise: {x: 0, y: 0, z: 0}
   sensor: {fileID: 0}
   color: {r: 0, g: 0, b: 0, a: 0}

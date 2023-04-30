@@ -19,12 +19,9 @@ public class WindowRobot : MonoBehaviour
     [Range(0.0f, 100.0f)]
     public float discharge;
     [Range(0.0f, 100.0f)]
-    public float speed;
-    [Range(0.0f, 15.0f)]
-    public float maxPower;
-    [Range(0.0f, 6000.0f)]
-    public float rpm;
-    [Range(0.0f, 1.0f)]
+    public float maxVelocity;
+    [Range(0.0f, 100.0f)]
+    public float turningRate;
     public float timeStep;
     public bool isPaused;
     public UnityEvent PickUpSpill;
@@ -47,13 +44,15 @@ public class WindowRobot : MonoBehaviour
         this.physics = this.gameObject.GetComponent<Rigidbody>();
         this.lastVelocity = physics.velocity.magnitude;
         this.lastRotation = physics.angularVelocity.magnitude;
-        this.timer = 0;
+        this.timer = 0f;
         this.preload = new List<GameObject>();
         this.lines = new List<GameObject>();
         Vector3 loc = new Vector3(1000, 1000, 1000);
+        Transform parent = GameObject.Find("Preload").transform;
         for (int i = 0; i < 100; i++)
         {
             GameObject o = Instantiate(linePrefab, loc, Quaternion.identity);
+            o.transform.parent = parent;
             preload.Add(o);
             o.SetActive(false);
         }
@@ -68,27 +67,23 @@ public class WindowRobot : MonoBehaviour
             {
                 Debug.Log("Generating new dynamic window");
                 ClearLines();
-                List<Velocity> list = GenerateVelocities();
-                foreach(Velocity v in list)
+                List<Vector3> window = DynamicWindow.CreateDynamicWindow(this, GetCurrentVelocity());
+                Debug.Log($"Window Size: {window.Count}");
+                foreach (Vector3 v in window)
                 {
-                    Debug.Log($"Translational: {v.LinearVelocity} m/s | Rotational: {v.RotationalVelocity} Θ/s | Next T: {v.NextLinearVelocity} m/s | Next R {v.NextRotationalVelocity}");
-                }
-                
-                List<Vector3> window = DynamicWindow.CreateDynamicWindow(list);
-                foreach(Vector3 v in window)
-                {
+                    Debug.Log($"Current location: ({this.transform.position.x}, {this.transform.position.z}) | Next Location: ({v.x}, {v.z})");
                     GameObject temp = GetNextLine();
-                    if(temp != null)
+                    Debug.Log(temp);
+                    if (temp != null)
                     {
-                        temp.transform.position = v;
-                        temp.transform.parent = this.transform;
-                        SensorLine l = temp.GetComponent<SensorLine>();
-                        l.sensor = this.transform;
-                        l.noise = Vector3.zero;
+                        VelocityLine l = temp.GetComponent<VelocityLine>();
+                        l.origin = this.transform;
+                        l.target = v;
+                        l.gameObject.SetActive(true);
                         lines.Add(temp);
                     }
                 }
-                timer = 0;
+                timer = 0.1f;
             }
             else
             {
@@ -126,43 +121,16 @@ public class WindowRobot : MonoBehaviour
 
     }
 
-    public List<Velocity> GenerateVelocities()
+    public Velocity GetCurrentVelocity()
     {
-        List<Velocity> list = new List<Velocity>();
         // get the current physics info
         float v = physics.velocity.magnitude;
         float theta = physics.angularVelocity.magnitude;
+        float rot = this.transform.rotation.y;
         float linAcc = (v - lastVelocity) / this.timeStep;
         float rotAcc = (theta - lastRotation) / this.timeStep;
-
-        for (int i = 0; i < 10; i++)
-        {
-            // generate a velocity object that incriments the linear and rotational acceleration by 10%
-            Velocity inc = new Velocity(this.transform.position, v, linAcc + (i * (linAcc * .1f)), theta, rotAcc + (i * .1f), this.timeStep);
-            // check if the velocity will exceed the maximum acceleration
-            if(inc.NextLinearVelocity >= CalculateAcceleration(maxPower))
-            {
-                list.Add(inc); // if not add it to the list
-            }
-            // generate a velocity object that decriments the linear and rotational acceleration by 10%
-            Velocity dec = new Velocity(this.transform.position, v, linAcc - (i * (linAcc * .1f)), theta, rotAcc - (i * .1f), this.timeStep);
-            // check if the velocity will exceed the maximum acceleration
-            if(dec.NextLinearVelocity >= CalculateAcceleration(maxPower))
-            {
-                list.Add(dec); // if not add it to the list
-            }
-        }
-        return list;
-    }
-
-    public float CalculateAcceleration(float torque)
-    {
-        return torque / physics.inertiaTensor.magnitude;
-    }
-
-    public float CalculateTorque(float power)
-    {
-        return (float) (60 * (power / (2 * Math.PI * rpm))); // given a power, calculate the given torque generated
+        Velocity vel = new Velocity(this.transform.position, rot, v, linAcc, theta, rotAcc, this.timeStep); // current velocity object
+        return vel;
     }
 
     public void CleanSpill()
@@ -204,7 +172,7 @@ public class WindowRobot : MonoBehaviour
     private void MoveToCurrent()
     {
         Vector3 v = new Vector3(current.position.x - this.transform.position.x, 0f, current.position.z - this.transform.position.z);
-        this.GetComponent<Rigidbody>().MovePosition(this.transform.position + v.normalized * Time.deltaTime * speed);
+        this.GetComponent<Rigidbody>().MovePosition(this.transform.position + v.normalized * Time.deltaTime * maxVelocity);
         //this.transform.LookAt(current);
     }
 
