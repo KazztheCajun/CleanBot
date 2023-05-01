@@ -21,9 +21,9 @@ public class DynamicWindow
      *
      */
 
-    public static List<Vector3> CreateDynamicWindow(WindowRobot robot, Velocity current) // given a list of safe velocities
+    public static List<Velocity> CreateDynamicWindow(WindowRobot robot, Velocity current)
     {
-        List<Vector3> list = new List<Vector3>();
+        List<Velocity> list = new List<Velocity>();
         
         // Robot spec window
         float[] spec = { -robot.maxVelocity, // maximum reverse linear velocity
@@ -39,20 +39,39 @@ public class DynamicWindow
                         current.RotationalVelocity + (current.RotationalAcceleration * current.TimeStep) };
        //Debug.Log($"Current Motion Window: Velocity Range: {mot[0]} -> {mot[1]} | Rotation Range {mot[2]} -> {mot[3]}");
 
-        float[] dw = { Mathf.Max(spec[0], mot[0]), Mathf.Min(spec[1], mot[1]), Mathf.Max(spec[2], mot[2]), Mathf.Min(spec[3], mot[3]) };
-        //Debug.Log($"Selected Velocity Range: {dw[0]} -> {dw[1]} | Rotation Range {dw[2]} -> {dw[3]}");
-
+        float[] dw = { Mathf.Max(spec[0], mot[0]), Mathf.Max(spec[1], mot[1]), Mathf.Max(spec[2], mot[2]), Mathf.Max(spec[3], mot[3]) };
+        // if(dw[0] == 0 && dw[1] == 0 && dw[2] == 0 && dw[3] == 0)
+        // {
+        //     dw = spec;
+        // }
+        //Debug.Log($"Selected Velocity Range: {spec[0]} -> {spec[1]} | Rotation Range {spec[2]} -> {spec[3]}");
         //float lambda = .00000001f;
-        for (float x = dw[0]; x <= dw[1]; x += .1f)
+        for (float x = spec[0]; x <= spec[1]; x += .1f)
         {
-            for (float y = dw[2]; y <= dw[3]; y += .1f)
+            for (float y = spec[2]; y <= spec[3]; y += 1f)
             {
-                Velocity temp = new Velocity(current.Location, current.Rotation, x, y, current.TimeStep);
-                Debug.Log($"Generated Velocity: ({x}, {y})");
-                list.Add(CalculatePosition(temp));
+                Velocity temp = new Velocity(current.Location, current.Rotation, x, (x - current.LinearVelocity) , y, (y - current.RotationalVelocity) , current.TimeStep);
+                //Velocity temp2 = new Velocity(current.Location, current.Rotation, -x, (x - current.LinearVelocity) ,-y, (y - current.RotationalVelocity) , current.TimeStep);
+                //Velocity temp3 = new Velocity(current.Location, current.Rotation, x, (x - current.LinearVelocity) ,-y, (y - current.RotationalVelocity) , current.TimeStep);
+                //Velocity temp4 = new Velocity(current.Location, current.Rotation, -x, (x - current.LinearVelocity) , y, (y - current.RotationalVelocity) , current.TimeStep);
+                //Debug.Log($"Generated Velocity: ({temp.LinearVelocity}, {temp.RotationalVelocity})");
+                temp.Destination = CalculatePosition(temp);
+                //temp2.Destination = CalculatePosition(temp2);
+                //temp3.Destination = CalculatePosition(temp3);
+                //temp4.Destination = CalculatePosition(temp4);
+
+                list.Add(temp);
+                //list.Add(temp2);
+                //list.Add(temp3);
+                //list.Add(temp4);
             }
         }
         return list;
+    }
+
+    public static void SetDestination(ref Velocity v)
+    {
+        v.Destination = CalculatePosition(v);
     }
 
     private static Vector3 CalculatePosition(Velocity vel)
@@ -62,22 +81,37 @@ public class DynamicWindow
 
     private static float ProjectXVelocity(Velocity v)
     {
-        return v.Location.x + CircularArcX(v.LinearVelocity, v.NextRotation); // next X is a result of the the integral of V(tn) * COS(Θn) from the current time to the next timestep
+        return v.Location.x + CircularArcX(v); // next X is a result of the the integral of V(tn) * COS(Θn) from the current time to the next timestep
     }
 
     private static float ProjectZVelocity(Velocity v)
     {
-        return v.Location.z + CircularArcZ(v.LinearVelocity, v.NextRotation); // next X is a result of the the integral of V(tn) * COS(Θn) from the current time to the next timestep
+        return v.Location.z + CircularArcZ(v); // next Z is a result of the the integral of V(tn) * SIN(Θn) from the current time to the next timestep
     }
 
-    private static float CircularArcX(float v, float r)
+    private static float CircularArcX(Velocity v)
     {
-        return v * Mathf.Cos(r);
+        if(v.RotationalVelocity == 0)
+        {
+           return v.LinearVelocity * Mathf.Cos(v.NextRotation) * v.TimeStep ;
+        }
+        else
+        {
+           return (((v.LinearVelocity / v.RotationalVelocity) * (Mathf.Sin(v.Rotation) - Mathf.Sin(v.NextRotation))));
+        }
+        
     }
 
-    private static float CircularArcZ(float v, float r)
+    private static float CircularArcZ(Velocity v)
     {
-        return v * Mathf.Sin(r);
+        if(v.RotationalVelocity == 0)
+        {
+           return v.LinearVelocity * Mathf.Sin(v.NextRotation) * v.TimeStep ;
+        }
+        else
+        {
+            return ((-(v.LinearVelocity / v.RotationalVelocity) * (Mathf.Cos(v.Rotation) - Mathf.Cos(v.NextRotation))));
+        }
     }
 }
 

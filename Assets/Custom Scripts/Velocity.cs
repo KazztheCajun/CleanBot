@@ -6,6 +6,7 @@ using UnityEngine;
 public class Velocity
 {
     private Vector3 location; // the origin of this velocity
+    private Vector3 destination;
     private float rotation; // current rotation of origin
     private float velocity; // the current translational velocity
     private float theta; // the current roational velocity
@@ -15,6 +16,8 @@ public class Velocity
 
     public Vector3 Location { get {return location;}
                               set {location = value;} }
+    public Vector3 Destination { get {return destination;}
+                              set {destination = value;} }
     public float Rotation { get {return rotation;}
                             set {rotation = value;} }
     public float NextRotation => rotation + (theta * time);

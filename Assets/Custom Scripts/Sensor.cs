@@ -6,13 +6,15 @@ public class Sensor : MonoBehaviour
 {
 
     public GameObject linePrefab;
-    private List<GameObject> lines;
+    public List<SensorLine> Lines => lines;
+    [SerializeField]
+    private List<SensorLine> lines;
     private List<GameObject> preload;
 
     // Start is called before the first frame update
     void Start()
     {
-        lines = new List<GameObject>();
+        lines = new List<SensorLine>();
         preload = new List<GameObject>();
         Vector3 loc = new Vector3(1000, 1000, 1000);
         Transform parent = GameObject.Find("Preload").transform;
@@ -28,9 +30,9 @@ public class Sensor : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        foreach(GameObject g in lines)
+        //lines.Sort();
+        foreach(SensorLine l in lines)
         {
-            SensorLine l = g.GetComponent<SensorLine>(); // get the SensorLine object
             l.noise = GenerateNoise(Vector3.Distance(this.transform.position, l.obj.transform.position)); // apply some new noise
             SetColor(l); // check if it can still be seen
         }
@@ -47,7 +49,7 @@ public class Sensor : MonoBehaviour
             l.sensor = this.transform; // set this sensor as it's sensor location
             l.obj = other_obj.transform; // set the object as it's obstacle location
             l.noise = GenerateNoise(Vector3.Distance(this.transform.position, other_obj.transform.position));
-            lines.Add(temp); // add it to the list of lines
+            lines.Add(l); // add it to the list of lines
             temp.SetActive(true); // ensure it is active in the scene
         }
         else
@@ -59,20 +61,9 @@ public class Sensor : MonoBehaviour
     void OnTriggerExit(Collider other)
     {
         GameObject other_obj = other.gameObject; // cache collided object
-        GameObject temp = null;
-        foreach(GameObject g in lines) // check the list of lines to see if this is a new obstacle to track
-        {
-            if (g.GetComponent<SensorLine>().obj == other_obj.transform) // if a line already has the detected object, it cannot be a new line
-            {
-                temp = g;
-                g.SetActive(false);
-            }
-        }
-
-        if(temp != null) // if a line was found, remove it from the list
-        {
-            lines.Remove(temp);
-        }
+        SensorLine l = lines.Find(x => x.obj == other_obj); // find the line that has this object as an obstacle
+        l.gameObject.SetActive(false); // deactivate it
+        lines.Remove(l); // remove it from the list of lines
     }
 
     private Vector3 GenerateNoise(float dist)
@@ -136,7 +127,7 @@ public class Sensor : MonoBehaviour
             l.sensor = this.transform; // set this sensor as it's sensor location
             l.obj = other_obj.transform; // set the object as it's obstacle location
             l.noise = GenerateNoise(Vector3.Distance(this.transform.position, other_obj.transform.position));
-            lines.Add(temp); // add it to the list of lines
+            lines.Add(l); // add it to the list of lines
             temp.SetActive(true); // ensure it is active in the scene
         }
     }

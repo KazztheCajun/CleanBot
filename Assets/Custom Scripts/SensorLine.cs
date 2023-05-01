@@ -1,14 +1,18 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SensorLine : MonoBehaviour 
+public class SensorLine : MonoBehaviour, IComparable<SensorLine>, IEquatable<SensorLine>
 {
 
     public Transform obj;
     public Vector3 noise;
     public Transform sensor;
     public Color color;
+    public bool isBlocked;
+    public float Distance => Vector3.Distance(obj.position, sensor.position);
+    public Vector3 ObstacleVector => obj.position - sensor.position;
     private LineRenderer line;
     
     // Start is called before the first frame update
@@ -29,5 +33,17 @@ public class SensorLine : MonoBehaviour
             this.line.startColor = color;
             this.line.endColor = color;
         }
+    }
+
+    public int CompareTo(SensorLine other)
+    {
+        if(other == null) return 1;
+
+        return this.Distance.CompareTo(other.Distance);
+    }
+
+    public bool Equals(SensorLine other)
+    {
+        return this.gameObject.Equals(other.gameObject);
     }
 }

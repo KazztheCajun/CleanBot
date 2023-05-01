@@ -46,7 +46,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   target: {x: 0, y: 0, z: 0}
   origin: {fileID: 0}
-  color: {r: 0, g: 1, b: 1, a: 0}
+  color: {r: 0, g: 1, b: 1, a: 1}
 --- !u!120 &2327786089786291325
 LineRenderer:
   m_ObjectHideFlags: 0
