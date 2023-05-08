@@ -216,7 +216,7 @@ def calc_to_goal_cost(trajectory, goal):
     """
         calc to goal cost with angle difference
     """
-
+    # x struct [x(m), y(m), yaw(rad), v(m/s), omega(rad/s)]
     dx = goal[0] - trajectory[-1, 0]
     dy = goal[1] - trajectory[-1, 1]
     error_angle = math.atan2(dy, dx)

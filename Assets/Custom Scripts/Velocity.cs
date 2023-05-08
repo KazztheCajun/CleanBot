@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Velocity
+public class Velocity : IComparable<Velocity>
 {
     private Vector3 location; // the origin of this velocity
     private Vector3 destination;
@@ -13,7 +13,10 @@ public class Velocity
     private float lineAcc; // translationsal acceleration
     private float rotAcc; // rotational acceleration
     private float time; // the amount of time this velocity occurs over
+    private float fitness; // how good of a choice this velocity is
 
+    public float Fitness { get {return fitness;}
+                           set {fitness = value;} }
     public Vector3 Location { get {return location;}
                               set {location = value;} }
     public Vector3 Destination { get {return destination;}
@@ -48,5 +51,15 @@ public class Velocity
         this.velocity = v;
         this.theta = t;
         this.time = ti;
+    }
+
+    public int CompareTo(Velocity other)
+    {
+        if(other == null)
+        {
+            return 1;
+        }
+
+        return -this.fitness.CompareTo(other.Fitness); // negate the default float CompareTo() sort largest to smallest
     }
 }

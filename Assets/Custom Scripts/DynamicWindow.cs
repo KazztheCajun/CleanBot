@@ -46,11 +46,11 @@ public class DynamicWindow
         // }
         //Debug.Log($"Selected Velocity Range: {spec[0]} -> {spec[1]} | Rotation Range {spec[2]} -> {spec[3]}");
         //float lambda = .00000001f;
-        for (float x = spec[0]; x <= spec[1]; x += .1f)
+        for (float x = spec[0]; x <= spec[1]; x += .5f)
         {
             for (float y = spec[2]; y <= spec[3]; y += 1f)
             {
-                Velocity temp = new Velocity(current.Location, current.Rotation, x, (x - current.LinearVelocity) , y, (y - current.RotationalVelocity) , current.TimeStep);
+                Velocity temp = new Velocity(current.Location, current.Rotation, x, (x - current.LinearVelocity) / current.TimeStep , y, (y - current.RotationalVelocity) / current.TimeStep, current.TimeStep);
                 //Velocity temp2 = new Velocity(current.Location, current.Rotation, -x, (x - current.LinearVelocity) ,-y, (y - current.RotationalVelocity) , current.TimeStep);
                 //Velocity temp3 = new Velocity(current.Location, current.Rotation, x, (x - current.LinearVelocity) ,-y, (y - current.RotationalVelocity) , current.TimeStep);
                 //Velocity temp4 = new Velocity(current.Location, current.Rotation, -x, (x - current.LinearVelocity) , y, (y - current.RotationalVelocity) , current.TimeStep);
@@ -93,11 +93,11 @@ public class DynamicWindow
     {
         if(v.RotationalVelocity == 0)
         {
-           return v.LinearVelocity * Mathf.Cos(v.NextRotation) * v.TimeStep ;
+           return v.LinearVelocity * Mathf.Cos(v.NextRotation) * v.TimeStep;
         }
         else
         {
-           return (((v.LinearVelocity / v.RotationalVelocity) * (Mathf.Sin(v.Rotation) - Mathf.Sin(v.NextRotation))));
+           return (v.LinearVelocity / v.RotationalVelocity) * (Mathf.Sin(v.Rotation) - Mathf.Sin(v.NextRotation));
         }
         
     }
@@ -106,11 +106,11 @@ public class DynamicWindow
     {
         if(v.RotationalVelocity == 0)
         {
-           return v.LinearVelocity * Mathf.Sin(v.NextRotation) * v.TimeStep ;
+            return v.LinearVelocity * Mathf.Sin(v.NextRotation) * v.TimeStep;
         }
         else
         {
-            return ((-(v.LinearVelocity / v.RotationalVelocity) * (Mathf.Cos(v.Rotation) - Mathf.Cos(v.NextRotation))));
+            return -(v.LinearVelocity / v.RotationalVelocity) * (Mathf.Cos(v.Rotation) - Mathf.Cos(v.NextRotation));
         }
     }
 }

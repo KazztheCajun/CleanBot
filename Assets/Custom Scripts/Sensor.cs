@@ -61,7 +61,7 @@ public class Sensor : MonoBehaviour
     void OnTriggerExit(Collider other)
     {
         GameObject other_obj = other.gameObject; // cache collided object
-        SensorLine l = lines.Find(x => x.obj == other_obj); // find the line that has this object as an obstacle
+        SensorLine l = lines.Find(x => x.obj.gameObject.Equals(other_obj)); // find the line that has this object as an obstacle
         l.gameObject.SetActive(false); // deactivate it
         lines.Remove(l); // remove it from the list of lines
     }

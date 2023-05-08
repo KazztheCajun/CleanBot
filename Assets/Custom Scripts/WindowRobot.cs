@@ -33,6 +33,7 @@ public class WindowRobot : MonoBehaviour
     public float clearanceParam;
     public float timeStep;
     public bool isPaused;
+    public bool showLines;
     public UnityEvent PickUpSpill;
 
     // private variables
@@ -87,47 +88,52 @@ public class WindowRobot : MonoBehaviour
             {
                 Debug.Log("Generating new dynamic window");
                 ClearLines();
-                Velocity best = GetCurrentVelocity(); // assume the current velocity is the best
-                DynamicWindow.SetDestination(ref best); // set it's destination value
+                List<Velocity> window = DynamicWindow.CreateDynamicWindow(this, GetCurrentVelocity()); // generate window based on current
+                Velocity best = window[0]; // assume the first velocity is the best
+                //DynamicWindow.SetDestination(ref best); // set it's destination value
                 float fitness = CalculateFitness(best);
-                List<Velocity> window = DynamicWindow.CreateDynamicWindow(this, best); // generate window based on current
                 Debug.Log($"Finding best Velocity from {window.Count} options");
                 foreach (Velocity v in window) // find the best velocity
                 {
                     //Debug.Log($"Current location: ({this.transform.position.x}, {this.transform.position.z}) | Next Location: ({v.x}, {v.z})");
-                    //DrawLine(v); // draw a trajectory line
+                    if(showLines)
+                    {
+                        DrawLine(v); // draw a trajectory line
+                    }
                     float f = CalculateFitness(v);
                     if(f > fitness) // if this velocity is more fit, set it as best
                     {
+                        Debug.Log($"New Best: {best.LinearVelocity} --> {v.LinearVelocity} m/s | {best.RotationalVelocity} --> {v.RotationalVelocity} rad/s | Fitness: {fitness} --> {f}");
                         best = v;
                         fitness = f;
+                        
                     }
                 }
-                Debug.Log($"Best Velocity: {best.LinearAcceleration} m/s | {best.RotationalVelocity} rad/s");
+                Debug.Log($"Best Velocity: {best.LinearVelocity} m/s | {best.RotationalVelocity} rad/s | Finess: {fitness}");
                 lastVelocity = velocity;
                 velocity = best;
                 timer = 0.1f;
             }
             else
             {
-                Debug.Log("Awating a new spill");
-                timer += Time.deltaTime;
+                //Debug.Log("Awating a new spill");
+                timer += Time.fixedDeltaTime;
             }
             
             // do stuff based on current state
             switch (state)
             {
                 case RState.DOCKED:
-                    this.battery += recharge * Time.deltaTime;
+                    this.battery += recharge * Time.fixedDeltaTime;
                     WaitForSpill();
                 break;
                 case RState.CLEANING:
-                    this.battery -= discharge * Time.deltaTime;
+                    this.battery -= discharge * Time.fixedDeltaTime;
                     //MoveToCurrent();
                     CleanSpill();
                     break;
                 case RState.RESUPPLY:
-                    this.battery -= discharge * Time.deltaTime;
+                    this.battery -= discharge * Time.fixedDeltaTime;
                     IsHome();
                 break;
             }
@@ -140,20 +146,29 @@ public class WindowRobot : MonoBehaviour
 
     private void MoveToTarget() // apply a translational velocity to the robot
     {
-        // (velocity.Destination - this.transform.position).normalized
-        // this.transform.forward
-        targetSphere.transform.position = velocity.Destination;
-        this.transform.Rotate( new Vector3(0, velocity.RotationalAcceleration * Time.fixedDeltaTime, 0));
-        physics.MovePosition(this.transform.position + -this.transform.forward * Time.fixedDeltaTime * velocity.LinearVelocity);
-        
+        // this.transform.rotation = Quaternion.RotateTowards(this.transform.rotation, Quaternion.LookRotation(rotation, Vector3.up), speed);
+        // physics.MoveRotation(Quaternion.LookRotation(dir, Vector3.up));
+
+        targetSphere.transform.position = velocity.Destination; // set target location
+        Vector3 dir = velocity.Destination - this.transform.position; // calculate the heading vector
+        float speed = velocity.RotationalVelocity * Time.fixedDeltaTime; // calculate the speed of the turn
+        Vector3 rotation = Vector3.RotateTowards(this.transform.forward, dir, speed, 0.0f);
+        this.transform.rotation = Quaternion.RotateTowards(this.transform.rotation, Quaternion.LookRotation(rotation, Vector3.up), (speed * 180/Mathf.PI)); // is it better to move the transform
+        // physics.MoveRotation(Quaternion.LookRotation(dir, Vector3.up)); // or the rigidbody | not this one
+        physics.MovePosition(this.transform.position + this.transform.forward * Time.fixedDeltaTime * velocity.LinearVelocity);
     }
 
     private float CalculateFitness(Velocity v)
     {
         float heading = headingParam * CalculateHeading(v);
         float clear = clearanceParam * CalculateClearance(v.Destination);
-        float vel = velocityParam * (ProjectVelocity(v) / maxVelocity);
+        float vel = velocityParam * ProjectVelocity(v);
         return alpha * (heading + clear + vel);
+    }
+
+    private void NormalizeVelocities()
+    {
+        
     }
 
     private float CalculateClearance(Vector3 t)
@@ -168,9 +183,9 @@ public class WindowRobot : MonoBehaviour
                 Physics.Raycast(this.transform.position, t.normalized, out target, t.magnitude); // raycast along the trajectory t
                 if(target.collider != null) // if the raycast hits something
                 {
-                    if(target.distance / 5 < min) // if this normalized distance is shorter
+                    if(target.distance < min) // if this distance is shorter
                     {
-                        min = target.distance / 5; // set it's distance as closest
+                        min = target.distance; // set it as min
                     }
                 }
             }
@@ -181,13 +196,17 @@ public class WindowRobot : MonoBehaviour
 
     private float ProjectVelocity(Velocity v)
     {
-        return maxVelocity - v.LinearVelocity; // return the normalized velocity projection
+        return Mathf.Abs(v.LinearVelocity);
     }
 
     private float CalculateHeading(Velocity v)
     {
-        Vector3 targetVector = goal.position - v.Destination;
-        return Vector3.Angle(v.Destination - v.Location, targetVector) / 180; // return the normalized angle between the target vector and the projected rotation
+        //return Vector3.Distance(goal.position, v.Location) - Vector3.Distance(goal.position, v.Destination);
+
+        Vector3 goalLoc = new Vector3(goal.position.x, .55f, goal.position.y);
+        Vector3 targetVector = goal.position - v.Destination; // vector from goal to destinaton location
+        //Vector3 headingVector = v.Destination - v.Location; // current heading vector
+        return 180 - Vector3.Angle(targetVector, this.transform.forward + new Vector3(0f, (v.RotationalAcceleration * 180/Mathf.PI), 0f)); // return the angle between the target vector and the projected rotation
     }
 
     public Velocity GetCurrentVelocity()
@@ -195,7 +214,7 @@ public class WindowRobot : MonoBehaviour
         // get the current physics info
         float v = physics.velocity.magnitude;
         float theta = physics.angularVelocity.magnitude;
-        float rot = this.transform.rotation.y;
+        float rot = this.transform.localEulerAngles.y * Mathf.PI / 180;
         float linAcc = (v - lastVelocity.LinearVelocity) / this.timeStep;
         float rotAcc = (theta - lastVelocity.Rotation) / this.timeStep;
         Velocity vel = new Velocity(this.transform.position, rot, v, linAcc, theta, rotAcc, this.timeStep); // current velocity object
