@@ -37,18 +37,17 @@ public class DynamicWindow
                         current.LinearVelocity + (current.LinearAcceleration * current.TimeStep),
                         current.RotationalVelocity - (current.RotationalAcceleration * current.TimeStep),
                         current.RotationalVelocity + (current.RotationalAcceleration * current.TimeStep) };
-       //Debug.Log($"Current Motion Window: Velocity Range: {mot[0]} -> {mot[1]} | Rotation Range {mot[2]} -> {mot[3]}");
-
-        float[] dw = { Mathf.Max(spec[0], mot[0]), Mathf.Max(spec[1], mot[1]), Mathf.Max(spec[2], mot[2]), Mathf.Max(spec[3], mot[3]) };
+        //Debug.Log($"Current Motion Window: Velocity Range: {mot[0]} -> {mot[1]} | Rotation Range {mot[2]} -> {mot[3]}");
+        // float[] dw = { Mathf.Max(spec[0], mot[0]), Mathf.Min(spec[1], mot[1]), Mathf.Max(spec[2], mot[2]), Mathf.Min(spec[3], mot[3]) };
         // if(dw[0] == 0 && dw[1] == 0 && dw[2] == 0 && dw[3] == 0)
         // {
         //     dw = spec;
         // }
-        //Debug.Log($"Selected Velocity Range: {spec[0]} -> {spec[1]} | Rotation Range {spec[2]} -> {spec[3]}");
+        Debug.Log($"Selected Velocity Range: {spec[0]} -> {spec[1]} | Rotation Range {spec[2]} -> {spec[3]}");
         //float lambda = .00000001f;
-        for (float x = spec[0]; x <= spec[1]; x += .5f)
+        for (float x = spec[0]; x <= spec[1]; x += .2f)
         {
-            for (float y = spec[2]; y <= spec[3]; y += 1f)
+            for (float y = spec[2]; y <= spec[3]; y += .1f)
             {
                 Velocity temp = new Velocity(current.Location, current.Rotation, x, (x - current.LinearVelocity) / current.TimeStep , y, (y - current.RotationalVelocity) / current.TimeStep, current.TimeStep);
                 //Velocity temp2 = new Velocity(current.Location, current.Rotation, -x, (x - current.LinearVelocity) ,-y, (y - current.RotationalVelocity) , current.TimeStep);
@@ -76,7 +75,7 @@ public class DynamicWindow
 
     private static Vector3 CalculatePosition(Velocity vel)
     {
-        return new Vector3(ProjectXVelocity(vel), .55f, ProjectZVelocity(vel)); // return a vector3 with the X & Z component and zero'd Y
+        return new Vector3(vel.Location.x + CircularArcX(vel), .55f, vel.Location.z - CircularArcZ(vel)); // return a vector3 with the X & Z component and zero'd Y
     }
 
     private static float ProjectXVelocity(Velocity v)

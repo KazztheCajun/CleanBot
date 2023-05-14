@@ -89,21 +89,21 @@ public class WindowRobot : MonoBehaviour
                 Debug.Log("Generating new dynamic window");
                 ClearLines();
                 List<Velocity> window = DynamicWindow.CreateDynamicWindow(this, GetCurrentVelocity()); // generate window based on current
-                Velocity best = window[0]; // assume the first velocity is the best
-                //DynamicWindow.SetDestination(ref best); // set it's destination value
-                float fitness = CalculateFitness(best);
+                Velocity best = null;
+                float fitness = float.MinValue;
                 Debug.Log($"Finding best Velocity from {window.Count} options");
                 foreach (Velocity v in window) // find the best velocity
                 {
-                    //Debug.Log($"Current location: ({this.transform.position.x}, {this.transform.position.z}) | Next Location: ({v.x}, {v.z})");
+                    
                     if(showLines)
                     {
                         DrawLine(v); // draw a trajectory line
                     }
                     float f = CalculateFitness(v);
+                    Debug.Log($"Velocity: {v.LinearVelocity} | Rotation: {v.RotationalVelocity} | Fitness: {f}");
                     if(f > fitness) // if this velocity is more fit, set it as best
                     {
-                        Debug.Log($"New Best: {best.LinearVelocity} --> {v.LinearVelocity} m/s | {best.RotationalVelocity} --> {v.RotationalVelocity} rad/s | Fitness: {fitness} --> {f}");
+                        Debug.Log($"New Best: {(best == null ? 0 : best.LinearVelocity)} --> {v.LinearVelocity} m/s | {(best == null ? 0 : best.RotationalVelocity)} --> {v.RotationalVelocity} rad/s | Fitness: {fitness} --> {f}");
                         best = v;
                         fitness = f;
                         
@@ -113,6 +113,7 @@ public class WindowRobot : MonoBehaviour
                 lastVelocity = velocity;
                 velocity = best;
                 timer = 0.1f;
+                
             }
             else
             {
@@ -146,16 +147,9 @@ public class WindowRobot : MonoBehaviour
 
     private void MoveToTarget() // apply a translational velocity to the robot
     {
-        // this.transform.rotation = Quaternion.RotateTowards(this.transform.rotation, Quaternion.LookRotation(rotation, Vector3.up), speed);
-        // physics.MoveRotation(Quaternion.LookRotation(dir, Vector3.up));
-
         targetSphere.transform.position = velocity.Destination; // set target location
-        Vector3 dir = velocity.Destination - this.transform.position; // calculate the heading vector
-        float speed = velocity.RotationalVelocity * Time.fixedDeltaTime; // calculate the speed of the turn
-        Vector3 rotation = Vector3.RotateTowards(this.transform.forward, dir, speed, 0.0f);
-        this.transform.rotation = Quaternion.RotateTowards(this.transform.rotation, Quaternion.LookRotation(rotation, Vector3.up), (speed * 180/Mathf.PI)); // is it better to move the transform
-        // physics.MoveRotation(Quaternion.LookRotation(dir, Vector3.up)); // or the rigidbody | not this one
-        physics.MovePosition(this.transform.position + this.transform.forward * Time.fixedDeltaTime * velocity.LinearVelocity);
+        physics.angularVelocity = new Vector3(0f, velocity.RotationalVelocity, 0f); // directly apply the rotational velocity
+        physics.velocity = new Vector3(0f, 0f, velocity.LinearVelocity); // directly apply the translational velocity
     }
 
     private float CalculateFitness(Velocity v)
@@ -196,25 +190,28 @@ public class WindowRobot : MonoBehaviour
 
     private float ProjectVelocity(Velocity v)
     {
-        return Mathf.Abs(v.LinearVelocity);
+        return Mathf.Abs(v.NextLinearVelocity - v.LinearVelocity);
     }
 
     private float CalculateHeading(Velocity v)
     {
-        //return Vector3.Distance(goal.position, v.Location) - Vector3.Distance(goal.position, v.Destination);
-
         Vector3 goalLoc = new Vector3(goal.position.x, .55f, goal.position.y);
-        Vector3 targetVector = goal.position - v.Destination; // vector from goal to destinaton location
-        //Vector3 headingVector = v.Destination - v.Location; // current heading vector
-        return 180 - Vector3.Angle(targetVector, this.transform.forward + new Vector3(0f, (v.RotationalAcceleration * 180/Mathf.PI), 0f)); // return the angle between the target vector and the projected rotation
+        Vector3 targetVector = goalLoc - v.Destination; // vector from goal to destinaton location
+        Vector3 headingVector = this.transform.forward + new Vector3(0f, v.RotationalAcceleration, 0f);
+        Quaternion target = Quaternion.LookRotation(targetVector);
+        Quaternion heading = Quaternion.LookRotation(headingVector);
+
+        float result = 180 - Quaternion.Angle(target, heading);
+        Debug.Log(result);
+        return result; // return the angle between the target vector and the projected rotation
     }
 
     public Velocity GetCurrentVelocity()
     {
         // get the current physics info
-        float v = physics.velocity.magnitude;
-        float theta = physics.angularVelocity.magnitude;
-        float rot = this.transform.localEulerAngles.y * Mathf.PI / 180;
+        float v = transform.InverseTransformDirection(physics.velocity).z; // get a signed forward velocity
+        float theta = transform.InverseTransformDirection(physics.angularVelocity).y; // get the rotational velocity
+        float rot = this.transform.eulerAngles.y * Mathf.Deg2Rad;
         float linAcc = (v - lastVelocity.LinearVelocity) / this.timeStep;
         float rotAcc = (theta - lastVelocity.Rotation) / this.timeStep;
         Velocity vel = new Velocity(this.transform.position, rot, v, linAcc, theta, rotAcc, this.timeStep); // current velocity object
