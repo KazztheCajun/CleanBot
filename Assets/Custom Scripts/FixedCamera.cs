@@ -18,7 +18,7 @@ public class FixedCamera : MonoBehaviour
     public bool DrawLineToLastSpill;
     private LineRenderer line;
 
-    public Transform currentSpill;
+    public Transform currentSpill, lineStart;
      public float speed = 2.5f;
 
     private void Awake() {
@@ -53,7 +53,7 @@ public class FixedCamera : MonoBehaviour
     }
 
     void DrawLine(Transform spill){
-        this.line.SetPosition(0, this.transform.position);
+        this.line.SetPosition(0, lineStart.position);
         this.line.SetPosition(1, spill.position);
         this.line.startColor = color;
         this.line.endColor = color;
