@@ -159,6 +159,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7416379546485492484}
+  - component: {fileID: 9200850555308340227}
   m_Layer: 0
   m_Name: Table&Chairs
   m_TagString: Untagged
@@ -185,6 +186,26 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200850555308340227
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6996104000614513211}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f70ca32504e1abd4298caf1daba7dd62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Chair1: {fileID: 993176676538651077}
+  Chair2: {fileID: 1516015088020632539}
+  Chair3: {fileID: 5469029248496458070}
+  Chair4: {fileID: 4382552308097250409}
+  occupiedChair1: 0
+  occupiedChair2: 0
+  occupiedChair3: 0
+  occupiedChair4: 0
 --- !u!1001 &993176676538815561
 PrefabInstance:
   m_ObjectHideFlags: 0
